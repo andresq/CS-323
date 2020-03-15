@@ -1,4 +1,4 @@
-###Projects from CS323
+### Projects from CS323
 *Project 1: Find the middle node of a singularly linked list
 *Project 2: Reverse a singulary linked list
 *Project 3: Store names and keep count in HashTable
