@@ -1,0 +1,7 @@
+listHead ->(dummy, 0, , d, NULL, NULL) ->(d, 2, , a, NULL, NULL) ->(a, 2, , c, NULL, NULL) ->(c, 3, , b, NULL, NULL) ->(b, 3, , z, NULL, NULL) ->(z, 7, , e, NULL, NULL) ->(e, 12, , y, NULL, NULL) ->(y, 13, , x, NULL, NULL) ->(x, 58, , NULL, NULL, NULL) -> NULL
+
+(zdacbeyx, 100, , NULL, zdacbey, x) -> NULL(zdacbey, 42, , x, zdacb, ey) ->(zdacb, 17, , ey, z, dacb) ->(z, 7, , dacb, NULL, NULL) ->(dacb, 10, , e, da, cb) ->(da, 4, , cb, d, a) ->(d, 2, , a, NULL, NULL) ->(a, 2, , c, NULL, NULL) ->(cb, 6, , z, c, b) ->(c, 3, , b, NULL, NULL) ->(b, 3, , da, NULL, NULL) ->(ey, 25, , zdacbey, e, y) ->(e, 12, , y, NULL, NULL) ->(y, 13, , zdacb, NULL, NULL) ->(x, 58, , zdacbeyx, NULL, NULL) ->
+
+(z, 7, , dacb, NULL, NULL) ->(zdacb, 17, , ey, z, dacb) ->(d, 2, , a, NULL, NULL) ->(da, 4, , cb, d, a) ->(a, 2, , c, NULL, NULL) ->(dacb, 10, , e, da, cb) ->(c, 3, , b, NULL, NULL) ->(cb, 6, , z, c, b) ->(b, 3, , da, NULL, NULL) ->(zdacbey, 42, , x, zdacb, ey) ->(e, 12, , y, NULL, NULL) ->(ey, 25, , zdacbey, e, y) ->(y, 13, , zdacb, NULL, NULL) ->(zdacbeyx, 100, , NULL, zdacbey, x) -> NULL(x, 58, , zdacbeyx, NULL, NULL) ->
+
+(z, 7, , dacb, NULL, NULL) ->(d, 2, , a, NULL, NULL) ->(a, 2, , c, NULL, NULL) ->(da, 4, , cb, d, a) ->(c, 3, , b, NULL, NULL) ->(b, 3, , da, NULL, NULL) ->(cb, 6, , z, c, b) ->(dacb, 10, , e, da, cb) ->(zdacb, 17, , ey, z, dacb) ->(e, 12, , y, NULL, NULL) ->(y, 13, , zdacb, NULL, NULL) ->(ey, 25, , zdacbey, e, y) ->(zdacbey, 42, , x, zdacb, ey) ->(x, 58, , zdacbeyx, NULL, NULL) ->(zdacbeyx, 100, , NULL, zdacbey, x) -> NULL
