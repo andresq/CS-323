@@ -4,3 +4,5 @@
 * Project 3: Store names and keep count in HashTable
 * Project 4: Huffman encoding 
 * Project 5: Create a QuadTree from binary image
+* Project 6: Running Length Encoding
+* Project 6.2: Running Length Decoding
