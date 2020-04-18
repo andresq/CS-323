@@ -77,8 +77,32 @@ class Proc {
     int currentTime; // This could be outside the code however it will make passing the varible around an pain so KEEP IN CLASS!
 
     // Scheduling Methods
-    int constructJobAry(ifstream& inFile2, int** adjMatrix){
-        return -22;
+    int constructJobAry(ifstream& inputFile2){
+        // 0
+        int totalTime = 0;
+        int numNode;
+        inputFile2 >> numNode; // clear the header information
+        //1 
+        while(!inputFile2.eof()){
+            int nodeID;
+            int jobTime;
+
+            inputFile2 >> nodeID;
+            inputFile2 >> jobTime;
+
+            totalTime += jobTime;
+
+            // 2
+            jobAry[nodeID].jobTime = jobTime;
+            jobAry[nodeID].onWhichProc = -1;
+            jobAry[nodeID].onOpen = 0;
+            jobAry[nodeID].parentCount = parentCountAry[nodeID];
+            jobAry[nodeID].depedentCount = dependentCountAry[nodeID];
+        }
+
+
+        return totalTime;
+
     }
 
     void computeParentCount(){
@@ -246,6 +270,10 @@ class Proc {
         dependentCountAry = new int[numNodes+1];
         for(int i = 0 ; i < numNodes+1; i++){dependentCountAry[i] = 0;}
         computeDependentCount();
+
+
+        // 7 
+        totalJobTimes = constructJobAry(inputFile2);
 
         
 
