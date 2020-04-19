@@ -26,9 +26,9 @@ class Scheduling {
 
     void printNode(ofstream& outFile){
         if(this->next == NULL){
-            outFile << "(" << jobId << "," << jobTime << "," << dependentCount << "," << "NULL" << ") -> NULL";
+            outFile << "(" << "jobId:" << jobId << ", " << "dependetCount: " << dependentCount << ", next.jobId:" << "NULL" << ") -> NULL";
         } else {
-            outFile << "(" << jobId << "," << jobTime << "," << dependentCount << "," << next->jobId << ") ->";
+            outFile << "(" << "jobId:" << jobId << ", " << "dependetCount: " << dependentCount << ", next.jobId:" << next->jobId << ") ->";
         }
     }
 };
@@ -83,9 +83,10 @@ class Proc {
         int numNode;
         inputFile2 >> numNode; // clear the header information
         //1 
+        int nodeID;
+        int jobTime;
         while(!inputFile2.eof()){
-            int nodeID;
-            int jobTime;
+            
 
             inputFile2 >> nodeID;
             inputFile2 >> jobTime;
@@ -106,39 +107,44 @@ class Proc {
     }
 
     void computeParentCount(){
-        for(int parent = 1; parent < numNodes+1; parent++){
-            for(int dependent = 1; dependent < numNodes+1; dependent++){
-                if(adjMatrix[parent][dependent] == 1){
-                    parentCountAry[parent]++;
-                }
+        for(int nodeId = 1; nodeId < numNodes+1; nodeId++){
+            int sum = 0;
+            for(int i = 1; i < numNodes+1; i++){
+                sum += adjMatrix[i][nodeId];
             }
+            parentCountAry[nodeId] = sum;
         }
 
     }
 
     void computeDependentCount(){
-        for(int parent = 1; parent < numNodes+1; parent++){
-            for(int dependent = 1; dependent < numNodes+1; dependent++){
-                if(adjMatrix[parent][dependent] == 1){
-                    dependentCountAry[dependent]++;
-                }
+        for(int nodeId = 1; nodeId < numNodes+1; nodeId++){
+            int sum = 0;
+            for(int j = 1; j < numNodes+1; j++){
+                sum += adjMatrix[nodeId][j];
             }
+            dependentCountAry[nodeId] = sum;
         }
     }
 
     int findOrphan(){
-        return -22;
+        for(int i = 1; i < numNodes+1; i++){
+            if(parentCountAry[i] <= 0 && jobAry[i].onOpen == 0 && jobAry[i].onWhichProc <= 0){
+                return i;
+            }
+        }
+        return -1;
     }
 
-    void listInsert(Node* listHead, Node* newNode){
-        Node* Spot = findSpot(listHead, newNode);
+    void listInsert(Node* newNode){
+        Node* Spot = findSpot(newNode);
         newNode->next = Spot->next;
         Spot->next = newNode;
     }
 
-    Node* findSpot(Node* listHead, Node* newNode){
-        Node* Spot = listHead;
-        while(Spot->next != NULL && Spot->next->dependentCount < newNode->dependentCount){
+    Node* findSpot(Node* newNode){
+        Node* Spot = Open; //Head
+        while(Spot->next != NULL && dependentCountAry[Spot->next->jobId] > dependentCountAry[newNode->jobId]){
             Spot = Spot->next;
         }
         return Spot;
@@ -158,36 +164,107 @@ class Proc {
 
 
     void printScheduleTable(ofstream& outFile1){
+        // Times
+        outFile1 << "\t ";
+        for(int i = 0; i < totalJobTimes; i++){
+            outFile1 << "-" << i << "--";
+        }
+        outFile1 << endl;
+
+        // each proccessor P(i)| Pi.| |  || | 
+        for(int proc = 1; proc < numProcs + 1; proc++){
+            outFile1 << "P(" << proc << ")|";
+            for(int time = 1; time < totalJobTimes+1; time++){
+                if(scheduleTable[proc][time] == 0){
+                    outFile1 << " - |";
+                } else {
+                    outFile1 << " " << time << " |";
+                }
+            }
+            outFile1 << endl;
+        }
+
+
 
     }
 
-    int findProcessors(){
+    int findProcessor(){
+        for(int i = 1; i < numProcs + 1; i++){
+            if(procAry[i].timeRemain <= 0){
+                return i;
+            }
+        }
 
-        return -22;
+        return -1;
     }
 
-    void putJobOnTable(int availProc, int currentTime, int jobId, int jobTime){
+    void putJobOnTable(int availProc, int jobId, int jobTime){
+        int time = currentTime;
+        int endTime = time + jobTime;
 
+        while(time < endTime){
+            scheduleTable[availProc][time] = jobId;
+            time++;
+        }
     }
 
     bool checkCycle(){
-        return false;
+        if(Open->next == NULL && !graphIsEmpty() && checkCond3()){
+            return true;
+        } else {
+            return false;
+        }
+
+
+    }
+
+    bool checkCond3(){
+        for(int i = 1; i < numProcs +1; i++){
+            if(procAry[i].timeRemain > 0){
+                return false;
+            }
+        }
+        return true;
     }
 
     void updateProcTime(){
-
+        for(int i = 1; i < numProcs + 1; i++){
+            if(procAry[i].timeRemain > 0){
+                procAry[i].timeRemain--;
+            }
+        }
     }
 
     int findDoneProc(){
-
-        return -22;
+        for(int i = 1; i < numProcs + 1; i++){
+            if(procAry[i].doWhichJob > 0 && procAry[i].timeRemain <= 0){
+                int jobId = procAry[i].doWhichJob;
+                procAry[i].doWhichJob = -1;
+                return jobId;
+            }
+        }
+        // no more finished procs
+        return -1;
     }
 
     void deleteFinishedNodes(){
-
+        int jobId = findDoneProc();
+        while(jobId > 0){
+            if(jobId > 0){
+                onGraphAry[jobId] = 0;
+                deleteEdge(jobId);
+                jobId = findDoneProc();
+            }
+            jobId = findDoneProc();
+        }
     }
 
     void deleteEdge(int jobId){
+        for(int dependent = 1 ; dependent < numNodes +1 ; dependent++){
+            if(adjMatrix[jobId][dependent] > 0){
+                parentCountAry[dependent]--;
+            }
+        }
 
     }
 
@@ -225,15 +302,34 @@ class Proc {
             adjMatrix[i] = new int[numNodes+1];
         }
 
+        parentCountAry = new int[numNodes+1];
+        for(int i = 0 ; i < numNodes+1; i++){parentCountAry[i] = 0;}
+
+        dependentCountAry = new int[numNodes+1];
+        for(int i = 0 ; i < numNodes+1; i++){dependentCountAry[i] = 0;}
+
+        onGraphAry = new int[numNodes+1];
+        for(int i = 1; i < numNodes + 1; i++){
+            onGraphAry[i] = 1;
+        }
+
         
 
         jobAry = new Job[numNodes+1];
+        for(int i = 1; i < numNodes+1; i++){
+            jobAry[i] = Job();
+        }
         procAry = new Proc[numProcs+1];
+        for(int i = 1; i < numNodes+1; i++){
+            procAry[i] = Proc();
+        }
 
         scheduleTable = new int*[numProcs+1];
         for(int i = 0; i < numProcs+1; i++){
             scheduleTable[i] = new int[totalJobTimes+1];
         }
+
+        
 
         
 
@@ -255,30 +351,61 @@ class Proc {
         
 
         // 4 
-
         loadMatrix(inputFile1);
 
-
-        
-
         // 5
-        parentCountAry = new int[numNodes+1];
-        for(int i = 0 ; i < numNodes+1; i++){parentCountAry[i] = 0;}
         computeParentCount();
 
         // 6
-        dependentCountAry = new int[numNodes+1];
-        for(int i = 0 ; i < numNodes+1; i++){dependentCountAry[i] = 0;}
         computeDependentCount();
 
 
         // 7 
         totalJobTimes = constructJobAry(inputFile2);
 
-        
+    }
+
+    void loadOpen(){
+        int orphanNode = findOrphan();
+        while(orphanNode != -1){
+            if (orphanNode > 0) {
+            int jobId = orphanNode;
+            int jobTime = jobAry[jobId].jobTime;
+            Node* newNode = new Node(jobId, jobTime, dependentCountAry[jobId]);
+            listInsert(newNode);
+            jobAry[jobId].onOpen = 1; // bool flag?
+            }
+        orphanNode = findOrphan();
+        }
+    }
+
+    void loadProcAry(){
+        int availProc = findProcessor();
+        while(availProc > 0 && Open->next != NULL && procUsed < numProcs){
+            if( availProc > 0){
+                procUsed++;
+                Node* newJob = Open->next;
+                Open->next = newJob->next;
+                newJob->next = NULL;
+
+                int jobId = newJob->jobId;
+                int jobTime = newJob->jobTime;
+                procAry[availProc].doWhichJob = jobId;
+                procAry[availProc].timeRemain = jobTime;
+                putJobOnTable(availProc, jobId, jobTime);
+            }
+            availProc = findProcessor();
+        }
+    }
 
 
-
+    bool graphIsEmpty(){
+        for(int i = 1; i < numNodes + 1; i++){
+            if(onGraphAry[i] > 0){
+                return false;
+            }
+        }
+        return true;
     }
 
 
@@ -298,21 +425,48 @@ int main(int argc, char* argv[]){
     // 1
     Scheduling S;
     S.initialization(inFile1, inFile2, numberOfProc);
-
-    // //DEBUGSTUFF
-    // for(int i  = 0; i < S.numNodes+1; i++){
-    //         for(int j = 0; j < S.numNodes+1; j++){
-    //             cout << S.adjMatrix[i][j]; 
-    //         }
-    //         cout << endl;
-    //     }
-
-    // for(int i  = 0; i < S.numNodes+1; i++){
-    //     // cout << "parent " << i << " = " << S.parentCountAry[i] << endl;
-    //     cout << "dependent " << i << " = " << S.dependentCountAry[i] << endl;
-    // }
+    bool hasCycle;
 
 
+
+
+    // Loop starts
+
+    while(!S.graphIsEmpty()){
+    // 2
+    S.loadOpen();
+
+    // 3
+    S.printList(outFile2);
+
+    // 4
+    S.loadProcAry();
+
+
+    // 5
+    hasCycle = S.checkCycle();
+    if (hasCycle){
+        cout << "There is a cycle in the graph! Exiting program now..." << endl;
+        exit(1);
+    }
+
+    // 6
+    S.printScheduleTable(outFile1);
+
+    // 7
+    S.currentTime++;
+
+    // 8
+    S.updateProcTime();
+
+    // 9
+    S.deleteFinishedNodes();
+
+    }
+
+    outFile1 << "Final table" << endl;
+    S.printScheduleTable(outFile1);
+   
 
 
     // Closing the files
@@ -320,8 +474,4 @@ int main(int argc, char* argv[]){
     inFile2.close();
     outFile1.close();
     outFile2.close();
-    
-
-    
-
 }
