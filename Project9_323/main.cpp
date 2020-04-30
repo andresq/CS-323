@@ -13,8 +13,7 @@ class Scheduling {
     int jobTime;
     int dependentCount;
     Node* next;
-    Node(){
-
+    Node(){ // need?
     }
 
     Node(int id, int time, int dCount){
@@ -53,8 +52,13 @@ class Job {
 
 class Proc {
     public:
-    int doWhichJob = -1;
-    int timeRemain = 0; // start at zero AKA available
+    int doWhichJob;;
+    int timeRemain;
+
+    Proc(){
+        doWhichJob = -1;
+        timeRemain = 0; // zero means available
+    }
 };
 
 // Scheduling attrivutes
@@ -73,7 +77,6 @@ class Proc {
     int* onGraphAry;
     int totalJobTimes;
     int** scheduleTable;
-
     int currentTime; // This could be outside the code however it will make passing the varible around an pain so KEEP IN CLASS!
 
     // Scheduling Methods
@@ -198,7 +201,7 @@ class Proc {
         return -1;
     }
 
-    void putJobOnTable(int availProc, int jobId, int jobTime){
+    void putJobOnTable(int availProc, int currentTime, int jobId, int jobTime){
         int time = currentTime;
         int endTime = time + jobTime;
 
@@ -303,10 +306,14 @@ class Proc {
         }
 
         parentCountAry = new int[numNodes+1];
-        for(int i = 0 ; i < numNodes+1; i++){parentCountAry[i] = 0;}
+        for(int i = 0 ; i < numNodes+1; i++){
+            parentCountAry[i] = 0;
+        }
 
         dependentCountAry = new int[numNodes+1];
-        for(int i = 0 ; i < numNodes+1; i++){dependentCountAry[i] = 0;}
+        for(int i = 0 ; i < numNodes+1; i++){
+            dependentCountAry[i] = 0;
+        }
 
         onGraphAry = new int[numNodes+1];
         for(int i = 1; i < numNodes + 1; i++){
@@ -324,10 +331,7 @@ class Proc {
             procAry[i] = Proc();
         }
 
-        scheduleTable = new int*[numProcs+1];
-        for(int i = 0; i < numProcs+1; i++){
-            scheduleTable[i] = new int[totalJobTimes+1];
-        }
+        
 
         
 
@@ -362,6 +366,10 @@ class Proc {
 
         // 7 
         totalJobTimes = constructJobAry(inputFile2);
+        scheduleTable = new int*[numProcs+1];
+        for(int i = 0; i < numProcs+1; i++){
+            scheduleTable[i] = new int[totalJobTimes+1];
+        }
 
     }
 
@@ -374,16 +382,18 @@ class Proc {
             Node* newNode = new Node(jobId, jobTime, dependentCountAry[jobId]);
             listInsert(newNode);
             jobAry[jobId].onOpen = 1; // bool flag?
+            orphanNode = findOrphan();
             }
         orphanNode = findOrphan();
         }
     }
 
-    void loadProcAry(){
+    void loadProcAry(int currentTime){
         int availProc = findProcessor();
         while(availProc > 0 && Open->next != NULL && procUsed < numProcs){
             if( availProc > 0){
                 procUsed++;
+
                 Node* newJob = Open->next;
                 Open->next = newJob->next;
                 newJob->next = NULL;
@@ -392,7 +402,7 @@ class Proc {
                 int jobTime = newJob->jobTime;
                 procAry[availProc].doWhichJob = jobId;
                 procAry[availProc].timeRemain = jobTime;
-                putJobOnTable(availProc, jobId, jobTime);
+                putJobOnTable(availProc, currentTime, jobId, jobTime);
             }
             availProc = findProcessor();
         }
@@ -415,6 +425,8 @@ int main(int argc, char* argv[]){
     // Inputs
     // 0
     
+    int loopNum = 0;
+
     ifstream inFile1(argv[1]);
     ifstream inFile2(argv[2]);
     int numberOfProc = stoi(argv[3]);
@@ -433,6 +445,7 @@ int main(int argc, char* argv[]){
     // Loop starts
 
     while(!S.graphIsEmpty()){
+        cout << "hello loop:" << loopNum++ << endl;
     // 2
     S.loadOpen();
 
@@ -440,7 +453,7 @@ int main(int argc, char* argv[]){
     S.printList(outFile2);
 
     // 4
-    S.loadProcAry();
+    S.loadProcAry(S.currentTime);
 
 
     // 5
@@ -455,6 +468,7 @@ int main(int argc, char* argv[]){
 
     // 7
     S.currentTime++;
+    cout << S.currentTime << endl;
 
     // 8
     S.updateProcTime();
